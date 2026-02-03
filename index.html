@@ -147,7 +147,7 @@
       100%{ transform: translateY(-140px) scale(1.6); opacity: 0; }
     }
 
-    /* MUSIC BUTTON */
+    /* music button */
     #musicBtn{
       position: fixed;
       top: 14px;
@@ -166,10 +166,9 @@
 </head>
 
 <body>
-  <!-- BACKGROUND MUSIC (put knee.mp3 in same folder as index.html) -->
+  <!-- Put knee.mp3 in the same folder as index.html -->
   <audio id="bgm" src="knee.mp3" loop preload="auto"></audio>
-
-  <button id="musicBtn" aria-label="Toggle music">🔇 Music</button>
+  <button id="musicBtn" aria-label="Toggle music">▶️ Play Music</button>
 
   <div class="card">
 
@@ -221,6 +220,7 @@
   </div>
 
   <script>
+    // ----- SCREENS -----
     const screen1 = document.getElementById("screen1");
     const screen2 = document.getElementById("screen2");
     const screen3 = document.getElementById("screen3");
@@ -237,7 +237,7 @@
       screen.classList.add("active");
     }
 
-    // hearts pop
+    // ----- HEARTS -----
     function popHearts(x, y){
       const emojis = ["💖","💘","💝","💕","💗","💞","😍"];
       for (let i = 0; i < 7; i++){
@@ -252,75 +252,65 @@
       }
     }
 
-    // --- MUSIC LOGIC ---
+    // ----- MUSIC (starts on FIRST click/tap after opening the link) -----
     const bgm = document.getElementById("bgm");
     const musicBtn = document.getElementById("musicBtn");
     let musicStarted = false;
 
-    async function startMusic(){
+    function updateMusicBtn(){
+      // show current state
+      if (!musicStarted) musicBtn.textContent = "▶️ Play Music";
+      else musicBtn.textContent = bgm.paused ? "🔇 Music" : "🔊 Music";
+    }
+
+    async function startMusicFromFirstGesture(){
       if (musicStarted) return;
       try{
         bgm.volume = 0.6; // adjust volume 0.0 - 1.0
         await bgm.play();
         musicStarted = true;
-        musicBtn.textContent = "🔊 Music";
-      }catch(e){
-        // autoplay blocked until user interaction
+        updateMusicBtn();
+      } catch (e){
+        // If it still fails, user can press button manually
         musicBtn.textContent = "▶️ Play Music";
       }
     }
 
-    function toggleMusic(){
+    // This is the key: music starts as soon as they interact once after opening the page
+    window.addEventListener("pointerdown", startMusicFromFirstGesture, { once: true });
+    window.addEventListener("keydown", startMusicFromFirstGesture, { once: true });
+
+    // manual toggle
+    musicBtn.addEventListener("click", async () => {
+      // clicking button also counts as a gesture, so start if not started
       if (!musicStarted){
-        startMusic();
+        await startMusicFromFirstGesture();
         return;
       }
-      if (bgm.paused){
-        bgm.play();
-        musicBtn.textContent = "🔊 Music";
-      } else {
-        bgm.pause();
-        musicBtn.textContent = "🔇 Music";
-      }
-    }
+      if (bgm.paused) await bgm.play();
+      else bgm.pause();
+      updateMusicBtn();
+    });
 
-    musicBtn.addEventListener("click", toggleMusic);
+    updateMusicBtn();
 
-    // Start music on first interaction (mobile-friendly)
-    function firstGestureStart(){
-      startMusic();
-      window.removeEventListener("pointerdown", firstGestureStart);
-      window.removeEventListener("keydown", firstGestureStart);
-    }
-    window.addEventListener("pointerdown", firstGestureStart, { once: true });
-    window.addEventListener("keydown", firstGestureStart, { once: true });
-
-    // Try once on load (harmless if blocked)
-    startMusic();
-
-    // Screen 1 actions
+    // ----- BUTTON ACTIONS -----
     s1yes.addEventListener("click", (e) => {
-      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen3);
     });
 
     s1no.addEventListener("click", (e) => {
-      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen2);
     });
 
-    // Screen 2 actions
     s2yes.addEventListener("click", (e) => {
-      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen3);
     });
 
-    // If they press "No" on Are you sure?, go back to the first page
     s2no.addEventListener("click", (e) => {
-      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen1);
     });
