@@ -146,10 +146,31 @@
       0%{ transform: translateY(0) scale(1); opacity: 1; }
       100%{ transform: translateY(-140px) scale(1.6); opacity: 0; }
     }
+
+    /* MUSIC BUTTON */
+    #musicBtn{
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 9999;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.35);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
   </style>
 </head>
 
 <body>
+  <!-- BACKGROUND MUSIC (put knee.mp3 in same folder as index.html) -->
+  <audio id="bgm" src="knee.mp3" loop preload="auto"></audio>
+
+  <button id="musicBtn" aria-label="Toggle music">🔇 Music</button>
+
   <div class="card">
 
     <!-- SCREEN 1 -->
@@ -231,25 +252,75 @@
       }
     }
 
+    // --- MUSIC LOGIC ---
+    const bgm = document.getElementById("bgm");
+    const musicBtn = document.getElementById("musicBtn");
+    let musicStarted = false;
+
+    async function startMusic(){
+      if (musicStarted) return;
+      try{
+        bgm.volume = 0.6; // adjust volume 0.0 - 1.0
+        await bgm.play();
+        musicStarted = true;
+        musicBtn.textContent = "🔊 Music";
+      }catch(e){
+        // autoplay blocked until user interaction
+        musicBtn.textContent = "▶️ Play Music";
+      }
+    }
+
+    function toggleMusic(){
+      if (!musicStarted){
+        startMusic();
+        return;
+      }
+      if (bgm.paused){
+        bgm.play();
+        musicBtn.textContent = "🔊 Music";
+      } else {
+        bgm.pause();
+        musicBtn.textContent = "🔇 Music";
+      }
+    }
+
+    musicBtn.addEventListener("click", toggleMusic);
+
+    // Start music on first interaction (mobile-friendly)
+    function firstGestureStart(){
+      startMusic();
+      window.removeEventListener("pointerdown", firstGestureStart);
+      window.removeEventListener("keydown", firstGestureStart);
+    }
+    window.addEventListener("pointerdown", firstGestureStart, { once: true });
+    window.addEventListener("keydown", firstGestureStart, { once: true });
+
+    // Try once on load (harmless if blocked)
+    startMusic();
+
     // Screen 1 actions
     s1yes.addEventListener("click", (e) => {
+      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen3);
     });
 
     s1no.addEventListener("click", (e) => {
+      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen2);
     });
 
     // Screen 2 actions
     s2yes.addEventListener("click", (e) => {
+      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen3);
     });
 
     // If they press "No" on Are you sure?, go back to the first page
     s2no.addEventListener("click", (e) => {
+      startMusic();
       popHearts(e.clientX, e.clientY);
       show(screen1);
     });
